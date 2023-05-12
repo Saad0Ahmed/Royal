@@ -1,9 +1,13 @@
 const { CommandInteraction } = require("discord.js");
+const { ticketActions, ticketResponse } = require("../../Handlers/tickets");
 
 module.exports = {
   name: "interactionCreate",
 
-  execute(interaction, client) {
+  async execute(interaction, client) {
+
+    await ticketActions(interaction);
+    await ticketResponse(interaction);
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
 
