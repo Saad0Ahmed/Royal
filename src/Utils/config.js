@@ -1,8 +1,8 @@
 const fs = require("fs");
-const path = require("path");
+const { resolve } = require("path");
 
 function loadConfig() {
-  const configFile = path.join(__dirname, "config.json");
+  const configFile = resolve(__dirname, "../../config.json");
   try {
     const config = JSON.parse(fs.readFileSync(configFile));
     validateConfig(config);

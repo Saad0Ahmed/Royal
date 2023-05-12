@@ -93,7 +93,7 @@ module.exports =
       await Canvas.loadImage("./img/bg.png").then((image) => {
         const context = this.canvas.getContext("2d");
         context.font = "72px  Algerian";
-        context.fillStyle = "#ffffff";
+        context.fillStyle = "#000000";
         context.drawImage(image, 0, 0, 1024, 500);
         context.fillText("Welcome", 360, 360);
         context.beginPath();

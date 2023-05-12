@@ -28,4 +28,11 @@ client.login(client.config.token).then(() => {
   loadEvents(client);
   loadCommands(client);
 });
+
+const proocess = require('node:process');
+
+process.on*('unhandledRejection', (reason, promise) => {
+  console.log('Unhandled Rejection at: ', promise, 'reason', reason);
+});
+
 module.exports = { client, openai };
