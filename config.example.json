@@ -1,5 +1,9 @@
 {
   "token": "Token Here",
   "mongodb": "DB URL Here",
-  "API_KEY": "Api Key Here"
+  "API_KEY": "Api Key Here",
+  "everyone": "ID",
+  "ticketParent": "ID",
+  "openticket": "ID",
+  "transcripts": "ID"
 }
