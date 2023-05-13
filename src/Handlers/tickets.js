@@ -1,18 +1,23 @@
 const { ButtonInteraction, EmbedBuilder, PermissionFlagsBits, ChatInputCommandInteraction, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { createTranscript } = require("discord-html-transcripts");
-const { transcripts, everyone, ticketParent } = require("../../config.json");
 const ticketSchema = require("../Models/Ticket");
+const TicketSetup = require("../Models/TicketSetup");
 
 module.exports = {
     /**@param {import("discord.js").Interaction} interaction */
     async ticketActions(interaction) {
         const { guild, member, customId, channel } = interaction;
-        const { ManageChannels } = PermissionFlagsBits;
+        const { ManageChannels, SendMessages } = PermissionFlagsBits;
 
         if (!interaction.isButton()) return;
-        if (!["close", "lock", "unlock"].includes(customId)) return;
 
-        if (!guild.members.me.permissions.has(ManageChannels))
+        if (!["close", "lock", "unlock", "claim"].includes(customId)) return;
+
+        const docs = await TicketSetup.findOne({ GuildID: guild.id });
+
+        if (!docs) return;
+
+        if (!guild.members.me.permissions.has((r) => r.id === docs.Handlers))
             return interaction.reply({
                 content: "I don't have permission for this.",
                 ephemeral: true
@@ -24,7 +29,7 @@ module.exports = {
 
             const data = await ticketSchema.findOne({ ChannelID: channel.id })
             if (!data) return
-            const fetchMember = await guild.members.fetch(data.MemberID);
+            const fetchMember = await guild.members.fetch(data.MembersID);
             switch (customId) {
                 case "close":
                     if (data.Closed === true) {
@@ -64,7 +69,7 @@ module.exports = {
                         })
                         .setTimestamp();
 
-                    const res = await guild.channels.fetch(transcripts)
+                    const res = await guild.channels.fetch(docs.Transcripts)
                     await res.send({
                         embeds: [transcriptEmbed],
                         files: [transcript],
@@ -103,8 +108,11 @@ module.exports = {
                     });
                     embed.setDescription("Ticket was locked successfully 🔐");
 
-                    channel.permissionOverwrites.edit(fetchMember, {
-                        SendMessages: false
+                    data.MembersID.forEach((m) => {
+                        channel.permissionOverwrites.edit(m,
+                            {
+                                SendMessages: false
+                            });
                     });
 
                     return interaction.reply({
@@ -127,17 +135,48 @@ module.exports = {
                     await ticketSchema.updateOne({
                         ChannelID: channel.id
                     }, {
-                        Locked: true
+                        Locked: false
                     });
                     embed.setDescription("Ticket was unlocked successfully 🔓");
 
-                    channel.permissionOverwrites.edit(fetchMember, {
-                        SendMessages: true
+                    data.MembersID.forEach((m) => {
+                        channel.permissionOverwrites.edit(m,
+                            {
+                                SendMessages: true
+                            });
                     });
 
                     return interaction.reply({
                         embeds: [embed]
-                    })
+                    });
+
+                case "claim":
+                    if (!member.permissions.has(ManageChannels))
+                        return interaction.reply({
+                            content: "You don't have permission for that.",
+                            ephemeral: true
+                        });
+
+                    if (data.Claimed === true)
+                        return interaction.reply({
+                            content: `Ticket is already claimed by <@${data.ClaimedBy}>`,
+                            ephemeral: true
+                        });
+
+                    await ticketSchema.updateOne({
+                        ChannelID: channel.id
+                    }, {
+                        Claimed: true,
+                        ClaimedBy: member.id
+                    });
+
+                    embed.setDescription(`Ticket is already claimed by ${member}`);
+
+                    interaction.reply({
+                        embeds: [embed]
+                    });
+
+                    break;
             };
 
         } catch (error) {
@@ -155,7 +194,13 @@ module.exports = {
 
         if (!interaction.isButton()) return;
 
-        if (!["member", "bug", "coding", "other"].includes(customId)) return;
+        const data = await TicketSetup.findOne({ GuildID: guild.id });
+
+        if (!data)
+            return;
+
+        if (!data.Buttons.includes(customId))
+            return;
 
         if (!guild.members.me.permissions.has(ManageChannels))
             interaction.reply({
@@ -167,10 +212,10 @@ module.exports = {
             await guild.channels.create({
                 name: `${member.user.username}-ticket${ticketId}`,
                 type: ChannelType.GuildText,
-                parent: ticketParent,
+                parent: data.Category,
                 permissionOverwrites: [
                     {
-                        id: everyone,
+                        id: data.Everyone,
                         deny: [ViewChannel, SendMessages, ReadMessageHistory],
                     },
                     {
@@ -181,12 +226,13 @@ module.exports = {
             }).then(async (response) => {
                 await ticketSchema.create({
                     GuildID: guild.id,
-                    MemberID: member.id,
+                    MembersID: member.id,
                     TicketID: ticketId,
                     ChannelID: response.id,
                     Closed: false,
                     Locked: false,
                     Type: customId,
+                    Claimed: false,
                 });
 
                 const embed = new EmbedBuilder()
@@ -204,6 +250,7 @@ module.exports = {
                     new ButtonBuilder().setCustomId('close').setLabel('Close ticket').setStyle(ButtonStyle.Primary).setEmoji('❌'),
                     new ButtonBuilder().setCustomId('lock').setLabel('Lock the ticket').setStyle(ButtonStyle.Secondary).setEmoji('🔐'),
                     new ButtonBuilder().setCustomId('unlock').setLabel('Unlock the ticket').setStyle(ButtonStyle.Success).setEmoji('🔓'),
+                    new ButtonBuilder().setCustomId('claim').setLabel('Claim').setStyle(ButtonStyle.Secondary).setEmoji('🛄'),
                 );
 
                 response.send({
