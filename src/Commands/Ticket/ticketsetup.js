@@ -102,7 +102,7 @@ module.exports = {
                 }
             );
 
-            const button = new ActionRowBuilder().setComponents(
+            const button = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(firstbutton[0]).setLabel(firstbutton[0]).setStyle(ButtonStyle.Danger).setEmoji(emoji1),
                 new ButtonBuilder().setCustomId(secondbutton[0]).setLabel(secondbutton[0]).setStyle(ButtonStyle.Secondary).setEmoji(emoji2),
                 new ButtonBuilder().setCustomId(thirdbutton[0]).setLabel(thirdbutton[0]).setStyle(ButtonStyle.Primary).setEmoji(emoji3),
@@ -112,8 +112,8 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setDescription(description)
 
-            await guild.channels.fetch(openticket);
-            if (!channel || channel.type !== 0) return
+            await guild.channels.fetch(channel.id);
+            if (!channel || channel.type !== 0) return;
             await channel.send({
                 embeds: [embed],
                 components: [button]
