@@ -41,6 +41,12 @@ module.exports = {
         )
         .addStringOption(option =>
             option
+                .setName("description")
+                .setDescription("Set the description for the ticket embed.")
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
                 .setName("firstbutton")
                 .setDescription("Format: (Name of button, Emoji)")
                 .setRequired(true)
@@ -80,11 +86,6 @@ module.exports = {
             const thirdbutton = options.getString("thirdbutton").split(",");
             const fourthbutton = options.getString("fourthbutton").split(",");
 
-            const emoji1 = firstbutton[1];
-            const emoji2 = secondbutton[1];
-            const emoji3 = thirdbutton[1];
-            const emoji4 = fourthbutton[1];
-
             await TicketSetup.findOneAndUpdate(
                 { GuildID: guild.id },
                 {
@@ -102,20 +103,21 @@ module.exports = {
                 }
             );
 
-            const button = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(firstbutton[0]).setLabel(firstbutton[0]).setStyle(ButtonStyle.Danger).setEmoji(emoji1),
-                new ButtonBuilder().setCustomId(secondbutton[0]).setLabel(secondbutton[0]).setStyle(ButtonStyle.Secondary).setEmoji(emoji2),
-                new ButtonBuilder().setCustomId(thirdbutton[0]).setLabel(thirdbutton[0]).setStyle(ButtonStyle.Primary).setEmoji(emoji3),
-                new ButtonBuilder().setCustomId(fourthbutton[0]).setLabel(fourthbutton[0]).setStyle(ButtonStyle.Success).setEmoji(emoji4),
-            );
+            const button = new ActionRowBuilder().setComponents(
+                new ButtonBuilder().setCustomId(firstbutton[0]).setLabel(firstbutton[0]).setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId(secondbutton[0]).setLabel(secondbutton[0]).setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(thirdbutton[0]).setLabel(thirdbutton[0]).setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId(fourthbutton[0]).setLabel(fourthbutton[0]).setStyle(ButtonStyle.Success),
+            )
 
             const embed = new EmbedBuilder()
+                .setTitle('Embed')
                 .setDescription(description)
 
             await guild.channels.fetch(channel.id);
             if (!channel || channel.type !== 0) return;
             await channel.send({
-                embeds: [embed],
+                embeds: ([embed]),
                 components: [button]
             });
 
