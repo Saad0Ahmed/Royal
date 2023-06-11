@@ -6,6 +6,7 @@ module.exports = {
 
   async execute(interaction, client) {
 
+    const { customId, values, guild, member } = interaction; // you need to destructure values from interactions first to use it below
     await ticketActions(interaction);
     await ticketResponse(interaction);
     if (interaction.isChatInputCommand()) {
@@ -28,7 +29,29 @@ module.exports = {
           })
         );
       }
+    } else if (interaction.isSelectMenu()) {
+      if (customId == "reaction-roles") {
+        for (let i = 0; i < values.length; i++) {
+          const roleId = values[i];
 
+          const role = guild.roles.fetch(roleId);
+          const hasRole = member.roles.fetch(roleId);
+
+          switch (hasRole) {
+            case true:
+              member.roles.remove(roleId);
+              break;
+            case false:
+              member.roles.add(roleId);
+              break;
+          }
+        }
+
+        interaction.reply({
+          content: "Roles updated.",
+          ephermeral: true
+        });
+      }
     } else {
       return;
     }
