@@ -5,51 +5,75 @@ module.exports = {
   name: "interactionCreate",
 
   async execute(interaction, client) {
-
-    const { customId, values, guild, member } = interaction; // you need to destructure values from interactions first to use it below
+    const { customId, values, guild, member } = interaction;
     await ticketActions(interaction);
     await ticketResponse(interaction);
-    if (interaction.isChatInputCommand()) {
+
+    if (interaction.isCommand()) {
       const command = client.commands.get(interaction.commandName);
 
       if (!command) {
         interaction.reply({ content: "outdated command" });
+        return;
       }
 
-      command.execute(interaction);
+      try {
+        await command.execute(interaction, client);
+      } catch (error) {
+        console.error(error);
+        interaction.reply({
+          content: "An error occurred while executing this command.",
+          ephemeral: true,
+        });
+      }
     } else if (interaction.isButton()) {
-      const { customId } = interaction;
-
-      if (customId == "verify") {
-        const role = interaction.guild.roles.fetch("1103526715449409656");
-        return interaction.member.roles.add(role).then((member) =>
+      if (customId === "verify") {
+        const role = await interaction.guild.roles.fetch("1103526715449409656");
+        if (!role) {
+          interaction.reply({
+            content: "The specified role could not be found.",
+            ephemeral: true,
+          });
+          return;
+        }
+        try {
+          await interaction.member.roles.add(role);
           interaction.reply({
             content: `${role} has been assigned to you.`,
-            ephermeral: true,
-          })
-        );
+            ephemeral: true,
+          });
+        } catch (error) {
+          console.error(error);
+          interaction.reply({
+            content: "An error occurred while assigning the role.",
+            ephemeral: true,
+          });
+        }
       }
     } else if (interaction.isSelectMenu()) {
-      if (customId == "reaction-roles") {
+      if (customId === "reaction-roles") {
         for (let i = 0; i < values.length; i++) {
           const roleId = values[i];
 
-          const role = guild.roles.fetch(roleId);
-          const hasRole = member.roles.fetch(roleId);
+          const role = await guild.roles.fetch(roleId);
+          if (!role) continue;
 
-          switch (hasRole) {
-            case true:
-              member.roles.remove(roleId);
-              break;
-            case false:
-              member.roles.add(roleId);
-              break;
+          const hasRole = await member.roles.fetch(roleId);
+
+          try {
+            if (hasRole) {
+              await member.roles.remove(roleId);
+            } else {
+              await member.roles.add(roleId);
+            }
+          } catch (error) {
+            console.error(error);
           }
         }
 
         interaction.reply({
           content: "Roles updated.",
-          ephermeral: true
+          ephemeral: true,
         });
       }
     } else {
