@@ -1,5 +1,5 @@
 const rrSchema = require("../../Models/ReactionRoles");
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, SelectMenuBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,18 +14,18 @@ module.exports = {
                 GuildID: guildId
             });
 
-            if (!data.roles.length > 0)
-            return interaction.reply({
-                content: "This server does not have any data.",
-                ephemeral: true
-            });
+            if (!data || data.roles.length > 0)
+                return interaction.reply({
+                    content: "This server does not have any data.",
+                    ephemeral: true
+                });
 
             const panelEmbed = new EmbedBuilder()
-            .setDescription("Please select a role below")
-            .setColor("Aqua")
+                .setDescription("Please select a role below")
+                .setColor("Aqua")
 
             const options = data.roles.map(x => {
-                const role = guild.role.fetch(x.roleId);
+                const role = guild.roles.fetch(x.roleId);
 
                 return {
                     label: role.name,
@@ -37,12 +37,12 @@ module.exports = {
 
             const menuComponents = [
                 new ActionRowBuilder()
-                .addComponents(
-                    new SelectMenuBuilder()
-                    .setCustomId('reaction-roles')
-                    .setMaxValues(options.length)
-                    .addOptions(options),
-                ),
+                    .addComponents(
+                        new StringSelectMenuBuilder()
+                            .setCustomId('reaction-roles')
+                            .setMaxValues(options.length)
+                            .addOptions(options),
+                    ),
             ];
 
             channel.send({

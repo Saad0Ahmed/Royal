@@ -25,7 +25,7 @@ module.exports = {
                 .setRequired(false)
         ),
     async execute(interaction) {
-        const { option, guildID, member } = interaction;
+        const { options, guildID, member } = interaction;
 
         const role = options.getRole("role");
         const description = options.getString("description");
@@ -53,22 +53,25 @@ module.exports = {
                 let roleData = data.roles.find((x) => x.roleId === role.id);
 
                 if (roleData) {
-                    roleData = newRoleData;
+                    return interaction.reply("Role already in database")
                 } else {
                     data.roles = [...data.roles, newRole]
                 }
-
-                await data.save();
+                try {
+                    await data.save();
+                } catch {
+                    console.log();
+                }
+                
             } else {
                 await rrSchema.create({
                     GuildID: guildID,
-                    roles: newRole,
+                    roles:[newRole],
                 });
             }
-
             return interaction.reply({
-                content: `Created new role **${role.name}**`
-            });
+              content: `Created new role **${role.name}**`
+          });
 
         } catch (err) {
             console.log(err)
