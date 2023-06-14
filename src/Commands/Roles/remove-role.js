@@ -13,7 +13,7 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const { option, guildId, member } = interaction;
+        const { options, guildId, member } = interaction;
 
         const role = options.getRole("role");
 
