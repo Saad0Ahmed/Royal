@@ -1,9 +1,15 @@
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, BaseInteraction, Client } = require("discord.js");
 const { ticketActions, ticketResponse } = require("../../Handlers/tickets");
 
 module.exports = {
   name: "interactionCreate",
 
+  /**
+   * 
+   * @param {BaseInteraction} interaction 
+   * @param {Client} client 
+   * @returns 
+   */
   async execute(interaction, client) {
     const { customId, values, guild, member } = interaction;
     await ticketActions(interaction);
@@ -50,15 +56,14 @@ module.exports = {
           });
         }
       }
-    } else if (interaction.isSelectMenu()) {
+    } else if (interaction.isAnySelectMenu()) {
       if (customId === "reaction-roles") {
         for (let i = 0; i < values.length; i++) {
           const roleId = values[i];
 
           const role = await guild.roles.fetch(roleId);
           if (!role) continue;
-
-          const hasRole = await member.roles.fetch(roleId);
+          const hasRole = await member.roles.cache.find(r => {r.id === roleId }) ?? null;
 
           try {
             if (hasRole) {

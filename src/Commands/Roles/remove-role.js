@@ -13,14 +13,14 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const { option, guildID, member } = interaction;
+        const { option, guildId, member } = interaction;
 
         const role = options.getRole("role");
 
         try {
 
             const data = await rrSchema.findOne({
-                GuildID: guildID
+                GuildID: guildId
             });
 
             if (!data)

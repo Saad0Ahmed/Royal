@@ -1,32 +1,37 @@
 const rrSchema = require("../../Models/ReactionRoles");
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ChatInputCommandInteraction, StringSelectMenuOptionBuilder } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("panel")
         .setDescription("Display reaction role panel.")
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+        /**
+         * 
+         * @param {ChatInputCommandInteraction} interaction 
+         * @returns 
+         */
     async execute(interaction) {
         const { options, guildId, guild, channel } = interaction;
 
         try {
             const data = await rrSchema.findOne({
-                GuildID: guildId
+                GuildID: guild.id
             });
-
-            if (!data || data.roles.length > 0)
+            console.log(data.roles.length )
+            if (!data || data.roles.length <= 0) {
                 return interaction.reply({
                     content: "This server does not have any data.",
                     ephemeral: true
                 });
 
+            }
             const panelEmbed = new EmbedBuilder()
                 .setDescription("Please select a role below")
                 .setColor("Aqua")
 
-            const options = data.roles.map(x => {
-                const role = guild.roles.fetch(x.roleId);
-
+            const options = data.roles.map( x => {
+                const role = guild.roles.cache.get(x.roleId);
                 return {
                     label: role.name,
                     value: role.id,
@@ -34,6 +39,7 @@ module.exports = {
                     emoji: x.roleEmoji || undefined
                 };
             });
+            console.log("op", options)
 
             const menuComponents = [
                 new ActionRowBuilder()

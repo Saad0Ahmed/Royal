@@ -1,5 +1,5 @@
 const rrSchema = require("../../Models/ReactionRoles");
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, ChatInputCommandInteraction } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,8 +24,13 @@ module.exports = {
                 .setDescription("Emoji for the role.")
                 .setRequired(false)
         ),
+        /**
+         * 
+         * @param {ChatInputCommandInteraction} interaction 
+         * @returns 
+         */
     async execute(interaction) {
-        const { options, guildID, member } = interaction;
+        const { options, member } = interaction;
 
         const role = options.getRole("role");
         const description = options.getString("description");
@@ -40,15 +45,14 @@ module.exports = {
             });
 
             const data = await rrSchema.findOne({
-                GuildID: guildID
-            });
+                GuildID: interaction.guild.id
+            }).catch((e)=>{null});
 
             const newRole = {
                 roleId: role.id,
                 roleDescription: description || "No description.",
                 roleEmoji: emoji || "",
             }
-
             if (data) {
                 let roleData = data.roles.find((x) => x.roleId === role.id);
 
@@ -65,7 +69,7 @@ module.exports = {
                 
             } else {
                 await rrSchema.create({
-                    GuildID: guildID,
+                    GuildID: interaction.guild.id,
                     roles:[newRole],
                 });
             }
