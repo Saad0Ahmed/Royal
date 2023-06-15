@@ -13,7 +13,7 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const { options, guildId, member } = interaction;
+        const { options, guildId, member, filter } = interaction;
 
         const role = options.getRole("role");
 
@@ -34,7 +34,7 @@ module.exports = {
 
             if (!findRole)
             return interaction.reply({
-                content: "THis role does not exist.",
+                content: "This role does not exist.",
                 ephemeral: true
             });
 
