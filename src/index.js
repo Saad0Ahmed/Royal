@@ -1,4 +1,5 @@
 const {
+  Discord
   Client,
   GatewayIntentBits,
   Partials,
@@ -34,6 +35,11 @@ process.on('unhandledRejection', (reason, promise) => {
 client.login(client.config.token).then(() => {
   loadEvents(client);
   loadCommands(client);
+});
+
+client.on('error', (error) => {
+  const channel = client.channels.get('1121365088490758297');
+  channel.send(error);
 });
 
 module.exports = { client, openai };

@@ -31,6 +31,7 @@ module.exports = {
 
             const roles = data.roles;
             const findRole = roles.find((r) => r.roleId === role.id);
+            const filter = (r) => r.roleId !== role.id;
 
             if (!findRole)
             return interaction.reply({
