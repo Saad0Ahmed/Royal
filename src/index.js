@@ -11,6 +11,7 @@ const { User, Message, GuildMember, ThreadMember, Channel } = Partials;
 const { Configuration, OpenAIApi } = require("openai")
 const { loadEvents } = require("./Handlers/eventHandler");
 const { loadCommands } = require("./Handlers/commandHandler");
+const { logger } = require("./Logs/Logger");
 const config = require("./Utils/config")
 
 const client = new Client({
@@ -27,9 +28,8 @@ const openai = new OpenAIApi(configuration);
 client.commands = new Collection();
 client.config = config;
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at: ', promise, 'reason', reason);
-});
+process.on("unhandledRejection", (err) =>
+  logger(`Unhandled Rejection`, err));
 
 client.login(client.config.token).then(() => {
   loadEvents(client);
